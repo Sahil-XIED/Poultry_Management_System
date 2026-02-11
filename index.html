@@ -1,0 +1,2219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FarmGuard – Poultry Intelligence System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Karla:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════
+   ROOT & RESET
+═══════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #0D1117;
+  --bg2:       #161B24;
+  --bg3:       #1E2533;
+  --border:    rgba(255,255,255,.07);
+  --border2:   rgba(255,255,255,.12);
+
+  --gold:      #F5A623;
+  --gold-dim:  rgba(245,166,35,.15);
+  --gold-glow: rgba(245,166,35,.3);
+
+  --green:     #2ECC71;
+  --green-dim: rgba(46,204,113,.15);
+
+  --red:       #E74C3C;
+  --red-dim:   rgba(231,76,60,.15);
+  --red-glow:  rgba(231,76,60,.3);
+
+  --yellow:    #F39C12;
+  --yellow-dim:rgba(243,156,18,.15);
+
+  --blue:      #3498DB;
+  --blue-dim:  rgba(52,152,219,.15);
+
+  --text:      #E8EAF0;
+  --text-dim:  #8892A4;
+  --text-faint:#4A5568;
+
+  --radius:    12px;
+  --radius-lg: 18px;
+}
+
+html { font-size: 15px; }
+body {
+  font-family: 'Karla', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* ═══════════════════════════════════════════════
+   NAVBAR
+═══════════════════════════════════════════════ */
+.navbar {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  backdrop-filter: blur(12px);
+}
+.nav-brand {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  letter-spacing: -.5px;
+}
+.nav-brand .dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%,100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: .5; transform: scale(.7); }
+}
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.nav-alert-badge {
+  background: var(--red);
+  color: #fff;
+  font-size: .72rem;
+  font-weight: 700;
+  padding: .2rem .6rem;
+  border-radius: 50px;
+  font-family: 'Syne', sans-serif;
+  animation: badge-pulse 2s ease-in-out infinite;
+}
+@keyframes badge-pulse {
+  0%,100% { box-shadow: 0 0 0 0 var(--red-glow); }
+  50%      { box-shadow: 0 0 0 6px transparent; }
+}
+.nav-date {
+  font-size: .82rem;
+  color: var(--text-dim);
+}
+.farm-name {
+  font-size: .85rem;
+  color: var(--text-dim);
+  border: 1px solid var(--border2);
+  padding: .3rem .8rem;
+  border-radius: 50px;
+}
+
+/* ═══════════════════════════════════════════════
+   LAYOUT
+═══════════════════════════════════════════════ */
+.app {
+  display: grid;
+  grid-template-columns: 230px 1fr;
+  min-height: calc(100vh - 64px);
+}
+
+/* ═══════════════════════════════════════════════
+   SIDEBAR
+═══════════════════════════════════════════════ */
+.sidebar {
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  padding: 1.5rem 0;
+  position: sticky;
+  top: 64px;
+  height: calc(100vh - 64px);
+  overflow-y: auto;
+}
+.sidebar-section {
+  padding: 0 1rem;
+  margin-bottom: .5rem;
+}
+.sidebar-label {
+  font-size: .68rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-faint);
+  font-weight: 700;
+  padding: 0 .5rem;
+  margin-bottom: .4rem;
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  padding: .65rem .75rem;
+  border-radius: 9px;
+  cursor: pointer;
+  transition: all .2s;
+  font-size: .9rem;
+  color: var(--text-dim);
+  font-weight: 500;
+  position: relative;
+  border: 1px solid transparent;
+}
+.nav-item:hover {
+  background: var(--bg3);
+  color: var(--text);
+}
+.nav-item.active {
+  background: var(--gold-dim);
+  color: var(--gold);
+  border-color: rgba(245,166,35,.2);
+}
+.nav-item .icon { font-size: 1rem; width: 20px; text-align: center; }
+.nav-item .alert-dot {
+  position: absolute;
+  right: .75rem;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 0 6px var(--red);
+}
+
+/* ═══════════════════════════════════════════════
+   MAIN CONTENT
+═══════════════════════════════════════════════ */
+.main {
+  padding: 2rem;
+  overflow-y: auto;
+}
+.page { display: none; animation: fadeIn .3s ease; }
+.page.active { display: block; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.page-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text);
+  line-height: 1.2;
+}
+.page-subtitle {
+  font-size: .85rem;
+  color: var(--text-dim);
+  margin-top: .3rem;
+}
+
+/* ═══════════════════════════════════════════════
+   STAT CARDS
+═══════════════════════════════════════════════ */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+.stat-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  position: relative;
+  overflow: hidden;
+  transition: transform .2s, border-color .2s;
+}
+.stat-card:hover { transform: translateY(-2px); border-color: var(--border2); }
+.stat-card::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  width: 60px; height: 60px;
+  border-radius: 0 var(--radius-lg) 0 100%;
+  opacity: .15;
+}
+.stat-card.gold::after  { background: var(--gold); }
+.stat-card.green::after { background: var(--green); }
+.stat-card.red::after   { background: var(--red); }
+.stat-card.blue::after  { background: var(--blue); }
+.stat-card.yellow::after{ background: var(--yellow); }
+
+.stat-icon { font-size: 1.5rem; margin-bottom: .75rem; }
+.stat-label {
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-faint);
+  font-weight: 700;
+  margin-bottom: .3rem;
+}
+.stat-value {
+  font-family: 'Syne', sans-serif;
+  font-size: 1.8rem;
+  font-weight: 800;
+  line-height: 1;
+}
+.stat-card.gold  .stat-value { color: var(--gold); }
+.stat-card.green .stat-value { color: var(--green); }
+.stat-card.red   .stat-value { color: var(--red); }
+.stat-card.blue  .stat-value { color: var(--blue); }
+.stat-card.yellow .stat-value { color: var(--yellow); }
+.stat-trend {
+  font-size: .78rem;
+  color: var(--text-dim);
+  margin-top: .4rem;
+}
+.stat-trend.up   { color: var(--green); }
+.stat-trend.down { color: var(--red); }
+.stat-trend.warn { color: var(--yellow); }
+
+/* ═══════════════════════════════════════════════
+   ALERT CARDS
+═══════════════════════════════════════════════ */
+.alerts-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 2rem;
+}
+.alerts-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.alerts-title {
+  font-family: 'Syne', sans-serif;
+  font-size: .95rem;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+.alert-item {
+  display: flex;
+  align-items: flex-start;
+  gap: .85rem;
+  padding: .9rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  transition: background .15s;
+}
+.alert-item:last-child { border-bottom: none; }
+.alert-item:hover { background: var(--bg3); }
+.alert-pill {
+  font-size: .7rem;
+  font-weight: 700;
+  padding: .25rem .7rem;
+  border-radius: 50px;
+  white-space: nowrap;
+  font-family: 'Syne', sans-serif;
+  letter-spacing: .5px;
+}
+.pill-critical { background: var(--red-dim);    color: var(--red);    border: 1px solid rgba(231,76,60,.3); }
+.pill-warning  { background: var(--yellow-dim); color: var(--yellow); border: 1px solid rgba(243,156,18,.3); }
+.pill-info     { background: var(--blue-dim);   color: var(--blue);   border: 1px solid rgba(52,152,219,.3); }
+.pill-ok       { background: var(--green-dim);  color: var(--green);  border: 1px solid rgba(46,204,113,.3); }
+
+.alert-content { flex: 1; }
+.alert-msg { font-size: .88rem; color: var(--text); font-weight: 500; }
+.alert-detail { font-size: .78rem; color: var(--text-dim); margin-top: .15rem; }
+.alert-time { font-size: .72rem; color: var(--text-faint); white-space: nowrap; }
+
+/* ═══════════════════════════════════════════════
+   GRID LAYOUT
+═══════════════════════════════════════════════ */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+
+/* ═══════════════════════════════════════════════
+   CARDS
+═══════════════════════════════════════════════ */
+.card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.card-head {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.card-title {
+  font-family: 'Syne', sans-serif;
+  font-size: .92rem;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+.card-body { padding: 1.25rem; }
+
+/* ═══════════════════════════════════════════════
+   FORMS
+═══════════════════════════════════════════════ */
+.form-group { margin-bottom: 1rem; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .75rem; }
+.form-label {
+  display: block;
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: var(--text-dim);
+  font-weight: 700;
+  margin-bottom: .4rem;
+}
+.form-control {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  border-radius: 9px;
+  padding: .65rem .9rem;
+  color: var(--text);
+  font-family: 'Karla', sans-serif;
+  font-size: .9rem;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.form-control:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--gold-dim);
+}
+.form-control option { background: var(--bg3); }
+select.form-control { cursor: pointer; }
+
+.hint {
+  font-size: .72rem;
+  color: var(--text-faint);
+  margin-top: .3rem;
+}
+
+/* ═══════════════════════════════════════════════
+   BUTTONS
+═══════════════════════════════════════════════ */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  padding: .65rem 1.25rem;
+  border: none;
+  border-radius: 9px;
+  font-family: 'Syne', sans-serif;
+  font-size: .82rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s;
+  letter-spacing: .3px;
+  white-space: nowrap;
+}
+.btn-gold {
+  background: var(--gold);
+  color: #000;
+  box-shadow: 0 3px 12px var(--gold-glow);
+}
+.btn-gold:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--text-dim);
+}
+.btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+.btn-danger {
+  background: var(--red-dim);
+  color: var(--red);
+  border: 1px solid rgba(231,76,60,.3);
+  padding: .4rem .75rem;
+  font-size: .76rem;
+}
+.btn-danger:hover { background: var(--red); color: #fff; }
+.btn-warn {
+  background: var(--yellow-dim);
+  color: var(--yellow);
+  border: 1px solid rgba(243,156,18,.3);
+  padding: .4rem .75rem;
+  font-size: .76rem;
+}
+.btn-sm { padding: .45rem .9rem; font-size: .78rem; }
+.btn-full { width: 100%; justify-content: center; padding: .8rem; }
+
+/* ═══════════════════════════════════════════════
+   TABLE
+═══════════════════════════════════════════════ */
+.table-wrap { overflow-x: auto; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .85rem;
+}
+thead th {
+  background: var(--bg);
+  padding: .75rem 1rem;
+  text-align: left;
+  font-size: .68rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-faint);
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+tbody td {
+  padding: .75rem 1rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  vertical-align: middle;
+}
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--bg3); }
+
+/* ═══════════════════════════════════════════════
+   BADGES
+═══════════════════════════════════════════════ */
+.badge {
+  display: inline-block;
+  padding: .22rem .65rem;
+  border-radius: 50px;
+  font-size: .72rem;
+  font-weight: 700;
+  font-family: 'Syne', sans-serif;
+}
+.badge-green  { background: var(--green-dim);  color: var(--green);  }
+.badge-red    { background: var(--red-dim);    color: var(--red);    }
+.badge-yellow { background: var(--yellow-dim); color: var(--yellow); }
+.badge-blue   { background: var(--blue-dim);   color: var(--blue);   }
+.badge-gold   { background: var(--gold-dim);   color: var(--gold);   }
+
+/* ═══════════════════════════════════════════════
+   PROGRESS BAR
+═══════════════════════════════════════════════ */
+.progress-bar-wrap {
+  background: var(--bg3);
+  border-radius: 50px;
+  height: 7px;
+  overflow: hidden;
+  margin-top: .5rem;
+}
+.progress-bar-fill {
+  height: 100%;
+  border-radius: 50px;
+  transition: width .6s ease;
+}
+.fill-green  { background: var(--green); }
+.fill-yellow { background: var(--yellow); }
+.fill-red    { background: var(--red); }
+.fill-gold   { background: var(--gold); }
+
+/* ═══════════════════════════════════════════════
+   PROFIT CARD
+═══════════════════════════════════════════════ */
+.profit-positive {
+  color: var(--green);
+  font-family: 'Syne', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 800;
+}
+.profit-negative {
+  color: var(--red);
+  font-family: 'Syne', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 800;
+}
+.pl-row {
+  display: flex;
+  justify-content: space-between;
+  padding: .6rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: .88rem;
+}
+.pl-row:last-child { border-bottom: none; }
+.pl-label { color: var(--text-dim); }
+.pl-value { font-weight: 600; color: var(--text); }
+.pl-value.pos { color: var(--green); }
+.pl-value.neg { color: var(--red); }
+
+/* ═══════════════════════════════════════════════
+   MODAL / TOAST
+═══════════════════════════════════════════════ */
+.toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+.toast {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  padding: .85rem 1.25rem;
+  font-size: .88rem;
+  color: var(--text);
+  box-shadow: 0 8px 24px rgba(0,0,0,.4);
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  animation: slideIn .3s ease;
+  max-width: 360px;
+}
+@keyframes slideIn {
+  from { transform: translateX(120%); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
+}
+.toast.success { border-left: 3px solid var(--green); }
+.toast.error   { border-left: 3px solid var(--red); }
+.toast.warning { border-left: 3px solid var(--yellow); }
+
+/* ═══════════════════════════════════════════════
+   EMPTY STATE
+═══════════════════════════════════════════════ */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-faint);
+}
+.empty-state .icon { font-size: 2.5rem; margin-bottom: .75rem; opacity: .4; }
+.empty-state p { font-size: .85rem; }
+
+/* ═══════════════════════════════════════════════
+   MORTALITY CHART
+═══════════════════════════════════════════════ */
+.chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 80px;
+  padding-top: 10px;
+}
+.chart-bar-wrap { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.chart-bar {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  min-height: 3px;
+  transition: height .5s ease;
+  position: relative;
+}
+.chart-bar:hover::after {
+  content: attr(data-val);
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  font-size: .68rem;
+  padding: .15rem .4rem;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.chart-bar-label { font-size: .62rem; color: var(--text-faint); }
+.chart-bar.normal { background: var(--blue-dim); border: 1px solid var(--blue); }
+.chart-bar.danger { background: var(--red-dim);  border: 1px solid var(--red); }
+
+/* ═══════════════════════════════════════════════
+   DISEASE TRACKER
+═══════════════════════════════════════════════ */
+.disease-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: .75rem;
+  border-left: 3px solid var(--red);
+  transition: background .2s;
+}
+.disease-card:hover { background: var(--bg2); }
+.disease-name {
+  font-family: 'Syne', sans-serif;
+  font-size: .9rem;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.disease-detail { font-size: .78rem; color: var(--text-dim); margin-top: .3rem; }
+.disease-actions { display: flex; gap: .5rem; margin-top: .6rem; }
+
+/* ═══════════════════════════════════════════════
+   VACCINE TIMELINE
+═══════════════════════════════════════════════ */
+.vax-item {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  padding: .75rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.vax-item:last-child { border-bottom: none; }
+.vax-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.vax-dot.done    { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.vax-dot.due     { background: var(--yellow); box-shadow: 0 0 6px var(--yellow); animation: pulse-dot 1.5s infinite; }
+.vax-dot.overdue { background: var(--red); box-shadow: 0 0 6px var(--red); animation: pulse-dot 1s infinite; }
+.vax-dot.upcoming{ background: var(--blue-dim); border: 1px solid var(--blue); }
+.vax-info { flex: 1; }
+.vax-name { font-size: .88rem; font-weight: 600; color: var(--text); }
+.vax-meta { font-size: .75rem; color: var(--text-dim); }
+
+/* ═══════════════════════════════════════════════
+   FEED WATER METERS
+═══════════════════════════════════════════════ */
+.meter-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.meter-card {
+  background: var(--bg3);
+  border-radius: var(--radius);
+  padding: 1rem;
+  text-align: center;
+}
+.meter-icon { font-size: 1.8rem; margin-bottom: .4rem; }
+.meter-label { font-size: .72rem; color: var(--text-faint); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+.meter-val { font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800; margin: .3rem 0; }
+.meter-status { font-size: .72rem; font-weight: 600; }
+
+/* ═══════════════════════════════════════════════
+   SQL PANEL
+═══════════════════════════════════════════════ */
+.sql-block {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  font-family: 'Courier New', monospace;
+  font-size: .78rem;
+  color: #9CDCFE;
+  overflow-x: auto;
+  line-height: 1.8;
+  white-space: pre;
+}
+.sql-kw  { color: #569CD6; }
+.sql-str { color: #CE9178; }
+.sql-cmt { color: #6A9955; }
+.sql-num { color: #B5CEA8; }
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════ */
+@media (max-width: 900px) {
+  .app { grid-template-columns: 1fr; }
+  .sidebar { position: static; height: auto; display: flex; flex-wrap: wrap; padding: .5rem; gap: .25rem; }
+  .sidebar-section { padding: 0; }
+  .sidebar-label { display: none; }
+  .two-col, .three-col { grid-template-columns: 1fr; }
+  .form-row, .form-row-3 { grid-template-columns: 1fr; }
+  .meter-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* ═══════════════════════════════════════════════
+   SCROLLBAR
+═══════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 99px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════ NAVBAR ══════════════════════════ -->
+<nav class="navbar">
+  <div class="nav-brand">
+    <span>🐓 FarmGuard</span>
+    <div class="dot"></div>
+  </div>
+  <div class="nav-right">
+    <span class="nav-date" id="navDate"></span>
+    <span class="farm-name">Sunrise Poultry Farm</span>
+    <span class="nav-alert-badge" id="alertCount">4 Alerts</span>
+  </div>
+</nav>
+
+<div class="app">
+
+<!-- ══════════════════════════ SIDEBAR ══════════════════════════ -->
+<aside class="sidebar">
+  <div class="sidebar-section">
+    <div class="sidebar-label">Overview</div>
+    <div class="nav-item active" onclick="showPage('dashboard', this)">
+      <span class="icon">📊</span> Dashboard
+    </div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Real Issues</div>
+    <div class="nav-item" onclick="showPage('mortality', this)">
+      <span class="icon">💀</span> Mortality Tracker
+      <span class="alert-dot"></span>
+    </div>
+    <div class="nav-item" onclick="showPage('disease', this)">
+      <span class="icon">🦠</span> Disease Log
+      <span class="alert-dot"></span>
+    </div>
+    <div class="nav-item" onclick="showPage('vaccine', this)">
+      <span class="icon">💉</span> Vaccination
+      <span class="alert-dot"></span>
+    </div>
+    <div class="nav-item" onclick="showPage('feed', this)">
+      <span class="icon">🌾</span> Feed & Water
+    </div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Finance</div>
+    <div class="nav-item" onclick="showPage('profit', this)">
+      <span class="icon">💰</span> Profit & Loss
+    </div>
+    <div class="nav-item" onclick="showPage('eggs', this)">
+      <span class="icon">🥚</span> Egg Production
+    </div>
+    <div class="nav-item" onclick="showPage('flock', this)">
+      <span class="icon">🐔</span> Flock Registry
+    </div>
+  </div>
+  <div class="sidebar-section">
+    <div class="sidebar-label">Setup</div>
+    <div class="nav-item" onclick="showPage('sql', this)">
+      <span class="icon">🛢️</span> MySQL Schema
+    </div>
+  </div>
+</aside>
+
+<!-- ══════════════════════════ MAIN ══════════════════════════ -->
+<main class="main">
+
+<!-- ███ DASHBOARD ███ -->
+<div class="page active" id="page-dashboard">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Farm Overview</div>
+      <div class="page-subtitle">Real-time health, production & financial snapshot</div>
+    </div>
+    <button class="btn btn-gold" onclick="refreshDashboard()">↻ Refresh</button>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="stats-grid" id="dashStats">
+    <div class="stat-card green">
+      <div class="stat-icon">🐔</div>
+      <div class="stat-label">Live Birds</div>
+      <div class="stat-value" id="liveBirds">2,840</div>
+      <div class="stat-trend down" id="birdTrend">↓ 12 died this week</div>
+    </div>
+    <div class="stat-card red">
+      <div class="stat-icon">💀</div>
+      <div class="stat-label">Mortality Rate</div>
+      <div class="stat-value" id="mortalityRate">0.42%</div>
+      <div class="stat-trend warn" id="mortTrend">⚠ Above 0.3% threshold</div>
+    </div>
+    <div class="stat-card gold">
+      <div class="stat-icon">🥚</div>
+      <div class="stat-label">Today's Eggs</div>
+      <div class="stat-value" id="todayEggs">2,156</div>
+      <div class="stat-trend up" id="eggTrend">↑ 76% lay rate</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-icon">🌾</div>
+      <div class="stat-label">Feed Consumed</div>
+      <div class="stat-value" id="feedConsumed">312 kg</div>
+      <div class="stat-trend" id="feedTrend">Required: 284 kg</div>
+    </div>
+    <div class="stat-card yellow">
+      <div class="stat-icon">💰</div>
+      <div class="stat-label">This Month P&L</div>
+      <div class="stat-value" id="monthPL">+₹24K</div>
+      <div class="stat-trend up">↑ Profitable</div>
+    </div>
+  </div>
+
+  <!-- ACTIVE ALERTS -->
+  <div class="alerts-box">
+    <div class="alerts-header">
+      <div class="alerts-title">⚠️ Active Farm Alerts</div>
+      <span class="badge badge-red" id="alertBadge">4 critical</span>
+    </div>
+    <div id="alertsList">
+      <!-- dynamically rendered -->
+    </div>
+  </div>
+
+  <!-- BOTTOM ROW -->
+  <div class="two-col">
+    <!-- Mortality last 7 days -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">💀 Mortality — Last 7 Days</div>
+      </div>
+      <div class="card-body">
+        <div class="chart-bars" id="mortalityChart"></div>
+        <div style="font-size:.72rem;color:var(--text-faint);margin-top:.5rem;">Red bars = days exceeding safe threshold (>5 deaths)</div>
+      </div>
+    </div>
+
+    <!-- Vaccine status -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">💉 Upcoming Vaccinations</div>
+        <a class="btn btn-outline btn-sm" onclick="showPage('vaccine', document.querySelector('.nav-item:nth-child(4)'))">View All</a>
+      </div>
+      <div class="card-body">
+        <div id="dashVaxList"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ███ MORTALITY TRACKER ███ -->
+<div class="page" id="page-mortality">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Mortality Tracker</div>
+      <div class="page-subtitle">Log daily bird deaths — system alerts when death rate exceeds safe limits</div>
+    </div>
+  </div>
+
+  <div class="two-col" style="margin-bottom:1.5rem;">
+    <div class="card">
+      <div class="card-head"><div class="card-title">📝 Record Bird Deaths</div></div>
+      <div class="card-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="date" id="mortDate" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Number of Deaths</label>
+            <input type="number" id="mortCount" class="form-control" placeholder="e.g. 3" min="0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Flock / Shed</label>
+          <select id="mortFlock" class="form-control">
+            <option value="">-- Select Flock --</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Likely Cause</label>
+          <select id="mortCause" class="form-control">
+            <option value="Unknown">Unknown</option>
+            <option value="Heat Stress">Heat Stress</option>
+            <option value="Newcastle Disease">Newcastle Disease</option>
+            <option value="Marek's Disease">Marek's Disease</option>
+            <option value="Avian Influenza (suspected)">Avian Influenza (suspected)</option>
+            <option value="Coccidiosis">Coccidiosis</option>
+            <option value="Injury / Trampling">Injury / Trampling</option>
+            <option value="Feed Deprivation">Feed Deprivation</option>
+            <option value="Water Deprivation">Water Deprivation</option>
+            <option value="Old Age">Old Age</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes</label>
+          <input type="text" id="mortNotes" class="form-control" placeholder="Any observations...">
+        </div>
+        <button class="btn btn-gold btn-full" onclick="addMortality()">+ Log Deaths</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">📊 7-Day Mortality Chart</div>
+        <span class="badge badge-red" id="mortAlertBadge">Loading...</span>
+      </div>
+      <div class="card-body">
+        <div class="chart-bars" id="mortalityChart2" style="height:100px;"></div>
+        <div style="margin-top:1rem;">
+          <div class="pl-row">
+            <span class="pl-label">Total deaths this week</span>
+            <span class="pl-value neg" id="weekDeaths">–</span>
+          </div>
+          <div class="pl-row">
+            <span class="pl-label">Worst day</span>
+            <span class="pl-value" id="worstDay">–</span>
+          </div>
+          <div class="pl-row">
+            <span class="pl-label">Alert threshold</span>
+            <span class="pl-value warn">5 deaths/day or 0.5% weekly</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">📋 Mortality Log</div>
+      <button class="btn btn-outline btn-sm" onclick="exportCSV('mortTable', 'mortality_log')">⬇ Export CSV</button>
+    </div>
+    <div class="table-wrap">
+      <table id="mortTable">
+        <thead><tr>
+          <th>#</th><th>Date</th><th>Flock</th><th>Deaths</th><th>Cause</th><th>Severity</th><th>Notes</th><th>Action</th>
+        </tr></thead>
+        <tbody id="mortBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ███ DISEASE LOG ███ -->
+<div class="page" id="page-disease">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Disease Log</div>
+      <div class="page-subtitle">Track illness outbreaks — early detection saves flocks</div>
+    </div>
+  </div>
+
+  <div class="two-col" style="margin-bottom:1.5rem;">
+    <div class="card">
+      <div class="card-head"><div class="card-title">🦠 Report Disease / Illness</div></div>
+      <div class="card-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Date Observed</label>
+            <input type="date" id="diseaseDate" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Disease / Symptom</label>
+            <select id="diseaseName" class="form-control">
+              <option value="">-- Select --</option>
+              <option value="Newcastle Disease">Newcastle Disease</option>
+              <option value="Avian Influenza (H5N1)">Avian Influenza (H5N1)</option>
+              <option value="Marek's Disease">Marek's Disease</option>
+              <option value="Infectious Bronchitis">Infectious Bronchitis</option>
+              <option value="Coccidiosis">Coccidiosis</option>
+              <option value="Fowl Pox">Fowl Pox</option>
+              <option value="Chronic Respiratory Disease">Chronic Respiratory Disease</option>
+              <option value="Gumboro Disease">Gumboro Disease</option>
+              <option value="Fowl Cholera">Fowl Cholera</option>
+              <option value="Salmonella">Salmonella</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Birds Affected</label>
+            <input type="number" id="diseaseAffected" class="form-control" placeholder="No. of birds" min="1">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Severity</label>
+            <select id="diseaseSeverity" class="form-control">
+              <option value="Mild">Mild (monitor)</option>
+              <option value="Moderate">Moderate (treat)</option>
+              <option value="Severe">Severe (isolate)</option>
+              <option value="Critical">Critical (vet required)</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Symptoms Observed</label>
+          <input type="text" id="diseaseSymptoms" class="form-control" placeholder="e.g. sneezing, drooping wings, diarrhoea">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Treatment / Action Taken</label>
+          <input type="text" id="diseaseTreatment" class="form-control" placeholder="e.g. Enrofloxacin 10mg/L water for 5 days">
+        </div>
+        <button class="btn btn-gold btn-full" onclick="addDisease()">+ Report Disease</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="card-title">⚡ Quick Disease Guide</div></div>
+      <div class="card-body" style="font-size:.82rem;color:var(--text-dim);line-height:1.9;">
+        <div style="margin-bottom:.5rem;"><span class="badge badge-red">Critical</span> <strong style="color:var(--text)">Avian Influenza</strong> — Report to authorities immediately. Mandatory culling.</div>
+        <div style="margin-bottom:.5rem;"><span class="badge badge-red">Critical</span> <strong style="color:var(--text)">Newcastle Disease</strong> — Highly contagious. Isolate entire shed.</div>
+        <div style="margin-bottom:.5rem;"><span class="badge badge-yellow">Moderate</span> <strong style="color:var(--text)">Marek's Disease</strong> — Vaccinate at hatch. No cure once infected.</div>
+        <div style="margin-bottom:.5rem;"><span class="badge badge-yellow">Moderate</span> <strong style="color:var(--text)">Coccidiosis</strong> — Treat with Amprolium. Check litter moisture.</div>
+        <div style="margin-bottom:.5rem;"><span class="badge badge-blue">Mild</span> <strong style="color:var(--text)">Fowl Pox</strong> — Dry form: self-limiting. Wet form: severe risk.</div>
+        <div style="margin-top:1rem;padding:0.75rem;background:var(--red-dim);border-radius:9px;color:var(--red);font-size:.78rem;border:1px solid rgba(231,76,60,.2);">
+          ⚠️ If mortality exceeds 3% in 24 hrs — call your veterinarian immediately
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="diseaseCards"><!-- rendered dynamically --></div>
+</div>
+
+<!-- ███ VACCINATION ███ -->
+<div class="page" id="page-vaccine">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Vaccination Schedule</div>
+      <div class="page-subtitle">Track immunisation — missed vaccines cause major flock losses</div>
+    </div>
+  </div>
+
+  <div class="two-col" style="margin-bottom:1.5rem;">
+    <div class="card">
+      <div class="card-head"><div class="card-title">💉 Add Vaccine Record</div></div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label">Vaccine Name</label>
+          <select id="vaxName" class="form-control">
+            <option value="">-- Select Vaccine --</option>
+            <option value="Marek's Disease Vaccine">Marek's Disease (Day 1)</option>
+            <option value="Newcastle B1 (Lasota)">Newcastle B1 / Lasota</option>
+            <option value="Gumboro IBD">Gumboro / IBD</option>
+            <option value="Infectious Bronchitis (IB)">Infectious Bronchitis (IB)</option>
+            <option value="Fowl Pox Vaccine">Fowl Pox</option>
+            <option value="Avian Influenza (H5N1)">Avian Influenza (H5N1)</option>
+            <option value="Fowl Cholera">Fowl Cholera</option>
+            <option value="Salmonella Vaccine">Salmonella</option>
+          </select>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Flock</label>
+            <select id="vaxFlock" class="form-control">
+              <option value="">-- Select Flock --</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Birds Vaccinated</label>
+            <input type="number" id="vaxBirds" class="form-control" placeholder="Count" min="1">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Date Administered</label>
+            <input type="date" id="vaxDate" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Next Due Date</label>
+            <input type="date" id="vaxNextDate" class="form-control">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Method</label>
+          <select id="vaxMethod" class="form-control">
+            <option value="Drinking Water">Drinking Water</option>
+            <option value="Eye Drop">Eye Drop</option>
+            <option value="Subcutaneous Injection">Subcutaneous Injection</option>
+            <option value="Intramuscular Injection">Intramuscular Injection</option>
+            <option value="Wing Web Stab">Wing Web Stab</option>
+            <option value="Spray">Spray</option>
+          </select>
+        </div>
+        <button class="btn btn-gold btn-full" onclick="addVaccine()">+ Save Record</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="card-title">📅 Standard Broiler Schedule</div></div>
+      <div class="card-body">
+        <div class="vax-item"><div class="vax-dot done"></div><div class="vax-info"><div class="vax-name">Marek's Disease</div><div class="vax-meta">Day 1 · Subcutaneous · At hatchery</div></div></div>
+        <div class="vax-item"><div class="vax-dot done"></div><div class="vax-info"><div class="vax-name">Newcastle (B1 strain)</div><div class="vax-meta">Day 7 · Eye Drop</div></div></div>
+        <div class="vax-item"><div class="vax-dot due"></div><div class="vax-info"><div class="vax-name">Gumboro (IBD)</div><div class="vax-meta">Day 14 · Drinking Water · <span style="color:var(--yellow)">DUE TODAY</span></div></div></div>
+        <div class="vax-item"><div class="vax-dot upcoming"></div><div class="vax-info"><div class="vax-name">Newcastle (Lasota)</div><div class="vax-meta">Day 21 · Drinking Water · Upcoming</div></div></div>
+        <div class="vax-item"><div class="vax-dot upcoming"></div><div class="vax-info"><div class="vax-name">Fowl Pox</div><div class="vax-meta">Day 28 · Wing Web Stab · Upcoming</div></div></div>
+        <div class="vax-item"><div class="vax-dot overdue"></div><div class="vax-info"><div class="vax-name">Infectious Bronchitis</div><div class="vax-meta">Day 18 · <span style="color:var(--red)">OVERDUE by 5 days!</span></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">📋 Vaccination History</div>
+      <button class="btn btn-outline btn-sm" onclick="exportCSV('vaxTable', 'vaccine_history')">⬇ Export</button>
+    </div>
+    <div class="table-wrap">
+      <table id="vaxTable">
+        <thead><tr>
+          <th>#</th><th>Vaccine</th><th>Flock</th><th>Birds</th><th>Date</th><th>Method</th><th>Next Due</th><th>Status</th><th>Del</th>
+        </tr></thead>
+        <tbody id="vaxBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ███ FEED & WATER ███ -->
+<div class="page" id="page-feed">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Feed & Water Management</div>
+      <div class="page-subtitle">Underfeeding by 10% reduces egg production by 15% — track daily</div>
+    </div>
+  </div>
+
+  <div class="three-col" style="margin-bottom:1.5rem;" id="feedMeterCards">
+    <div class="card">
+      <div class="card-head"><div class="card-title">🌾 Feed Status</div></div>
+      <div class="card-body">
+        <div class="meter-card">
+          <div class="meter-icon">🌾</div>
+          <div class="meter-label">Today Consumed</div>
+          <div class="meter-val" id="feedValToday" style="color:var(--gold)">312 kg</div>
+          <div class="meter-status" id="feedStatusToday" style="color:var(--yellow)">⚠ 10% over target</div>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill fill-yellow" id="feedBar" style="width:85%"></div></div>
+          <div class="hint" style="margin-top:.5rem;">Target: 284 kg/day for 2,840 birds</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">💧 Water Intake</div></div>
+      <div class="card-body">
+        <div class="meter-card">
+          <div class="meter-icon">💧</div>
+          <div class="meter-label">Today Consumed</div>
+          <div class="meter-val" id="waterValToday" style="color:var(--blue)">820 L</div>
+          <div class="meter-status" id="waterStatusToday" style="color:var(--green)">✓ Normal range</div>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill fill-green" id="waterBar" style="width:75%"></div></div>
+          <div class="hint" style="margin-top:.5rem;">Expected: 2× feed weight (568L min)</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">🏪 Feed Stock</div></div>
+      <div class="card-body">
+        <div class="meter-card">
+          <div class="meter-icon">🏪</div>
+          <div class="meter-label">Stock Remaining</div>
+          <div class="meter-val" id="stockVal" style="color:var(--red)">1,200 kg</div>
+          <div class="meter-status" id="stockStatus" style="color:var(--red)">⚠ Only 4 days left!</div>
+          <div class="progress-bar-wrap"><div class="progress-bar-fill fill-red" id="stockBar" style="width:22%"></div></div>
+          <div class="hint" style="margin-top:.5rem;">Reorder when stock drops below 7 days</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-head"><div class="card-title">📝 Log Daily Feed & Water</div></div>
+      <div class="card-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="date" id="feedDate" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Flock</label>
+            <select id="feedFlock" class="form-control">
+              <option value="">-- Select --</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Feed Given (kg)</label>
+            <input type="number" id="feedKg" class="form-control" placeholder="e.g. 140" step="0.1" min="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Water Given (litres)</label>
+            <input type="number" id="waterLtr" class="form-control" placeholder="e.g. 410" step="1" min="0">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Feed Type</label>
+            <select id="feedType" class="form-control">
+              <option value="Starter (0-14d)">Starter (0–14 days)</option>
+              <option value="Grower (15-28d)">Grower (15–28 days)</option>
+              <option value="Finisher (29d+)">Finisher (29d+)</option>
+              <option value="Layer Mash">Layer Mash</option>
+              <option value="Broiler Concentrate">Broiler Concentrate</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Stock After (kg)</label>
+            <input type="number" id="stockAfter" class="form-control" placeholder="e.g. 1060" min="0">
+          </div>
+        </div>
+        <button class="btn btn-gold btn-full" onclick="addFeedLog()">+ Save Log</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="card-title">📊 Feed Log</div></div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Flock</th><th>Feed</th><th>Water</th><th>Type</th><th>Del</th></tr></thead>
+          <tbody id="feedBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ███ PROFIT & LOSS ███ -->
+<div class="page" id="page-profit">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Profit & Loss Calculator</div>
+      <div class="page-subtitle">Real-time financial snapshot based on your farm data</div>
+    </div>
+  </div>
+
+  <div class="two-col" style="margin-bottom:1.5rem;">
+    <div class="card">
+      <div class="card-head"><div class="card-title">📥 Income Sources</div></div>
+      <div class="card-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Eggs Sold (dozen)</label>
+            <input type="number" id="eggsSold" class="form-control" placeholder="e.g. 500" oninput="calcPL()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Price per dozen (₹)</label>
+            <input type="number" id="eggPrice" class="form-control" placeholder="e.g. 70" oninput="calcPL()">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Birds Sold (count)</label>
+            <input type="number" id="birdsSold" class="form-control" placeholder="e.g. 50" oninput="calcPL()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Price per bird (₹)</label>
+            <input type="number" id="birdPrice" class="form-control" placeholder="e.g. 180" oninput="calcPL()">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Other Income (₹)</label>
+          <input type="number" id="otherIncome" class="form-control" placeholder="Manure, subsidies, etc." oninput="calcPL()">
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="card-title">📤 Expenses</div></div>
+      <div class="card-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Feed Cost (₹)</label>
+            <input type="number" id="feedCost" class="form-control" placeholder="e.g. 28000" oninput="calcPL()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Medicine/Vaccine (₹)</label>
+            <input type="number" id="medCost" class="form-control" placeholder="e.g. 3500" oninput="calcPL()">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Labour Cost (₹)</label>
+            <input type="number" id="labourCost" class="form-control" placeholder="e.g. 12000" oninput="calcPL()">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Electricity/Fuel (₹)</label>
+            <input type="number" id="electricCost" class="form-control" placeholder="e.g. 4000" oninput="calcPL()">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Other Expenses (₹)</label>
+          <input type="number" id="otherCost" class="form-control" placeholder="Litter, disinfectants, etc." oninput="calcPL()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head"><div class="card-title">💹 P&L Summary</div></div>
+    <div class="card-body">
+      <div class="two-col">
+        <div>
+          <div class="pl-row"><span class="pl-label">🥚 Egg Revenue</span><span class="pl-value pos" id="plEggRev">₹0</span></div>
+          <div class="pl-row"><span class="pl-label">🐔 Bird Sales</span><span class="pl-value pos" id="plBirdRev">₹0</span></div>
+          <div class="pl-row"><span class="pl-label">+ Other Income</span><span class="pl-value pos" id="plOtherRev">₹0</span></div>
+          <div class="pl-row" style="border-top:2px solid var(--gold);margin-top:.5rem;"><span class="pl-label" style="font-weight:700;color:var(--text)">Total Revenue</span><span class="pl-value" id="plTotalRev" style="color:var(--gold);font-size:1.1rem;font-family:'Syne',sans-serif;">₹0</span></div>
+        </div>
+        <div>
+          <div class="pl-row"><span class="pl-label">🌾 Feed</span><span class="pl-value neg" id="plFeedCost">₹0</span></div>
+          <div class="pl-row"><span class="pl-label">💊 Medicine</span><span class="pl-value neg" id="plMedCost">₹0</span></div>
+          <div class="pl-row"><span class="pl-label">👷 Labour</span><span class="pl-value neg" id="plLabCost">₹0</span></div>
+          <div class="pl-row"><span class="pl-label">⚡ Electricity</span><span class="pl-value neg" id="plElecCost">₹0</span></div>
+          <div class="pl-row"><span class="pl-label">+ Other</span><span class="pl-value neg" id="plOtherCost">₹0</span></div>
+          <div class="pl-row" style="border-top:2px solid var(--red);margin-top:.5rem;"><span class="pl-label" style="font-weight:700;color:var(--text)">Total Expenses</span><span class="pl-value" id="plTotalCost" style="color:var(--red);font-size:1.1rem;font-family:'Syne',sans-serif;">₹0</span></div>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border)">
+        <div style="font-size:.78rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-faint);font-weight:700;margin-bottom:.5rem;">NET PROFIT / LOSS</div>
+        <div id="plResult" class="profit-positive">₹0</div>
+        <div id="plMargin" style="font-size:.82rem;color:var(--text-dim);margin-top:.35rem;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ███ EGG PRODUCTION ███ -->
+<div class="page" id="page-eggs">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Egg Production</div>
+      <div class="page-subtitle">Track lay rate — below 65% signals disease or nutritional deficiency</div>
+    </div>
+  </div>
+
+  <div class="two-col" style="margin-bottom:1.5rem;">
+    <div class="card">
+      <div class="card-head"><div class="card-title">🥚 Record Collection</div></div>
+      <div class="card-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Date</label>
+            <input type="date" id="eggDate" class="form-control">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Flock</label>
+            <select id="eggFlock" class="form-control">
+              <option value="">-- Select --</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Eggs Collected</label>
+            <input type="number" id="eggCount" class="form-control" placeholder="e.g. 1200" min="0">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Broken / Rejected</label>
+            <input type="number" id="eggBroken" class="form-control" placeholder="e.g. 12" min="0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sellable Eggs (auto)</label>
+          <input type="number" id="eggSellable" class="form-control" placeholder="Calculated" readonly style="opacity:.6;">
+        </div>
+        <button class="btn btn-gold btn-full" onclick="addEggRecord()">+ Save Collection</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">📊 Production Summary</div></div>
+      <div class="card-body">
+        <div class="pl-row"><span class="pl-label">Total eggs (all time)</span><span class="pl-value" id="totalEggsAll">0</span></div>
+        <div class="pl-row"><span class="pl-label">This week</span><span class="pl-value" id="weekEggs">0</span></div>
+        <div class="pl-row"><span class="pl-label">Average lay rate</span><span class="pl-value" id="avgLayRate">0%</span></div>
+        <div class="pl-row"><span class="pl-label">Total sellable</span><span class="pl-value pos" id="totalSellable">0</span></div>
+        <div class="pl-row"><span class="pl-label">Total broken</span><span class="pl-value neg" id="totalBroken">0</span></div>
+        <div style="margin-top:1rem;padding:.75rem;background:var(--blue-dim);border-radius:9px;border:1px solid rgba(52,152,219,.2);font-size:.78rem;color:var(--blue);">
+          💡 <strong>Lay rate benchmark:</strong> Layers: 80–95% | Breeder: 65–75% | Below 60% = investigate immediately
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">📋 Egg Collection Log</div>
+      <button class="btn btn-outline btn-sm" onclick="exportCSV('eggTable', 'egg_log')">⬇ Export</button>
+    </div>
+    <div class="table-wrap">
+      <table id="eggTable">
+        <thead><tr><th>#</th><th>Date</th><th>Flock</th><th>Total</th><th>Broken</th><th>Sellable</th><th>Lay Rate</th><th>Status</th><th>Del</th></tr></thead>
+        <tbody id="eggBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ███ FLOCK REGISTRY ███ -->
+<div class="page" id="page-flock">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Flock Registry</div>
+      <div class="page-subtitle">Manage all flocks — source of truth for all other modules</div>
+    </div>
+  </div>
+
+  <div class="two-col" style="margin-bottom:1.5rem;">
+    <div class="card">
+      <div class="card-head"><div class="card-title">➕ Add Flock</div></div>
+      <div class="card-body">
+        <div class="form-group">
+          <label class="form-label">Flock Name / Shed ID</label>
+          <input type="text" id="flockName" class="form-control" placeholder="e.g. Shed A – Leghorn Layer">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Breed</label>
+            <select id="flockBreed" class="form-control">
+              <option value="White Leghorn">White Leghorn</option>
+              <option value="Rhode Island Red">Rhode Island Red</option>
+              <option value="Broiler (Cobb 500)">Broiler (Cobb 500)</option>
+              <option value="Broiler (Ross 308)">Broiler (Ross 308)</option>
+              <option value="Desi / Indigenous">Desi / Indigenous</option>
+              <option value="Kadaknath">Kadaknath</option>
+              <option value="Aseel">Aseel</option>
+              <option value="BV-380 Layer">BV-380 Layer</option>
+              <option value="Sonali Cross">Sonali Cross</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Purpose</label>
+            <select id="flockPurpose" class="form-control">
+              <option value="Layer">Layer (eggs)</option>
+              <option value="Broiler">Broiler (meat)</option>
+              <option value="Breeder">Breeder</option>
+              <option value="Dual Purpose">Dual Purpose</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Initial Birds</label>
+            <input type="number" id="flockBirds" class="form-control" placeholder="e.g. 1000" min="1">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Age (days)</label>
+            <input type="number" id="flockAge" class="form-control" placeholder="e.g. 42" min="0">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Placement Date</label>
+          <input type="date" id="flockDate" class="form-control">
+        </div>
+        <button class="btn btn-gold btn-full" onclick="addFlock()">+ Register Flock</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head"><div class="card-title">📊 Flock Overview</div></div>
+      <div class="card-body">
+        <div class="pl-row"><span class="pl-label">Total flocks registered</span><span class="pl-value" id="flockTotalCount">0</span></div>
+        <div class="pl-row"><span class="pl-label">Total birds (initial)</span><span class="pl-value" id="flockTotalBirds">0</span></div>
+        <div class="pl-row"><span class="pl-label">Current live birds (after mortality)</span><span class="pl-value pos" id="flockLiveBirds">0</span></div>
+        <div id="flockBreedBreakdown" style="margin-top:1rem;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="card-title">🐔 Registered Flocks</div>
+      <button class="btn btn-outline btn-sm" onclick="exportCSV('flockTable', 'flock_registry')">⬇ Export</button>
+    </div>
+    <div class="table-wrap">
+      <table id="flockTable">
+        <thead><tr><th>#</th><th>Name / Shed</th><th>Breed</th><th>Purpose</th><th>Birds</th><th>Age</th><th>Placed On</th><th>Action</th></tr></thead>
+        <tbody id="flockBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- ███ MYSQL SCHEMA ███ -->
+<div class="page" id="page-sql">
+  <div class="page-header">
+    <div>
+      <div class="page-title">MySQL Database Schema</div>
+      <div class="page-subtitle">Run these queries in phpMyAdmin or MySQL CLI to set up the backend</div>
+    </div>
+    <button class="btn btn-gold" onclick="copySQL()">📋 Copy All SQL</button>
+  </div>
+
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-head"><div class="card-title">🛢️ Full Schema — poultry_farm database</div></div>
+    <div class="card-body">
+<div class="sql-block" id="sqlBlock"><span class="sql-cmt">-- ═══════════════════════════════════════════════
+-- FARMGUARD POULTRY MANAGEMENT SYSTEM
+-- Real Farm Issues Database Schema
+-- ═══════════════════════════════════════════════</span>
+
+<span class="sql-kw">CREATE DATABASE IF NOT EXISTS</span> poultry_farm
+  <span class="sql-kw">CHARACTER SET</span> utf8mb4
+  <span class="sql-kw">COLLATE</span> utf8mb4_unicode_ci;
+
+<span class="sql-kw">USE</span> poultry_farm;
+
+<span class="sql-cmt">-- 1. FLOCK REGISTRY</span>
+<span class="sql-kw">CREATE TABLE IF NOT EXISTS</span> flock (
+    id           <span class="sql-kw">INT AUTO_INCREMENT PRIMARY KEY</span>,
+    name         <span class="sql-kw">VARCHAR</span>(<span class="sql-num">100</span>) <span class="sql-kw">NOT NULL</span>,
+    breed        <span class="sql-kw">VARCHAR</span>(<span class="sql-num">100</span>) <span class="sql-kw">NOT NULL</span>,
+    purpose      <span class="sql-kw">ENUM</span>(<span class="sql-str">'Layer'</span>,<span class="sql-str">'Broiler'</span>,<span class="sql-str">'Breeder'</span>,<span class="sql-str">'Dual Purpose'</span>) <span class="sql-kw">NOT NULL</span>,
+    initial_birds <span class="sql-kw">INT NOT NULL DEFAULT</span> <span class="sql-num">0</span>,
+    current_birds <span class="sql-kw">INT NOT NULL DEFAULT</span> <span class="sql-num">0</span>,
+    age_days     <span class="sql-kw">INT DEFAULT</span> <span class="sql-num">0</span>,
+    placed_on    <span class="sql-kw">DATE NOT NULL</span>,
+    created_at   <span class="sql-kw">TIMESTAMP DEFAULT CURRENT_TIMESTAMP</span>
+) ENGINE=InnoDB;
+
+<span class="sql-cmt">-- 2. MORTALITY TRACKER (Real Farm Issue #1)</span>
+<span class="sql-kw">CREATE TABLE IF NOT EXISTS</span> mortality (
+    id           <span class="sql-kw">INT AUTO_INCREMENT PRIMARY KEY</span>,
+    flock_id     <span class="sql-kw">INT NOT NULL</span>,
+    death_date   <span class="sql-kw">DATE NOT NULL</span>,
+    death_count  <span class="sql-kw">INT NOT NULL</span>,
+    cause        <span class="sql-kw">VARCHAR</span>(<span class="sql-num">100</span>) <span class="sql-kw">DEFAULT</span> <span class="sql-str">'Unknown'</span>,
+    notes        <span class="sql-kw">TEXT</span>,
+    severity     <span class="sql-kw">ENUM</span>(<span class="sql-str">'Normal'</span>,<span class="sql-str">'Warning'</span>,<span class="sql-str">'Critical'</span>) <span class="sql-kw">DEFAULT</span> <span class="sql-str">'Normal'</span>,
+    created_at   <span class="sql-kw">TIMESTAMP DEFAULT CURRENT_TIMESTAMP</span>,
+    <span class="sql-kw">FOREIGN KEY</span> (flock_id) <span class="sql-kw">REFERENCES</span> flock(id) <span class="sql-kw">ON DELETE CASCADE</span>
+) ENGINE=InnoDB;
+
+<span class="sql-cmt">-- 3. DISEASE LOG (Real Farm Issue #2)</span>
+<span class="sql-kw">CREATE TABLE IF NOT EXISTS</span> disease_log (
+    id           <span class="sql-kw">INT AUTO_INCREMENT PRIMARY KEY</span>,
+    observed_on  <span class="sql-kw">DATE NOT NULL</span>,
+    disease_name <span class="sql-kw">VARCHAR</span>(<span class="sql-num">100</span>) <span class="sql-kw">NOT NULL</span>,
+    birds_affected <span class="sql-kw">INT NOT NULL DEFAULT</span> <span class="sql-num">0</span>,
+    severity     <span class="sql-kw">ENUM</span>(<span class="sql-str">'Mild'</span>,<span class="sql-str">'Moderate'</span>,<span class="sql-str">'Severe'</span>,<span class="sql-str">'Critical'</span>),
+    symptoms     <span class="sql-kw">TEXT</span>,
+    treatment    <span class="sql-kw">TEXT</span>,
+    resolved     <span class="sql-kw">TINYINT DEFAULT</span> <span class="sql-num">0</span>,
+    created_at   <span class="sql-kw">TIMESTAMP DEFAULT CURRENT_TIMESTAMP</span>
+) ENGINE=InnoDB;
+
+<span class="sql-cmt">-- 4. VACCINATION SCHEDULE (Real Farm Issue #3)</span>
+<span class="sql-kw">CREATE TABLE IF NOT EXISTS</span> vaccination (
+    id           <span class="sql-kw">INT AUTO_INCREMENT PRIMARY KEY</span>,
+    flock_id     <span class="sql-kw">INT NOT NULL</span>,
+    vaccine_name <span class="sql-kw">VARCHAR</span>(<span class="sql-num">100</span>) <span class="sql-kw">NOT NULL</span>,
+    birds_vaccinated <span class="sql-kw">INT NOT NULL</span>,
+    admin_date   <span class="sql-kw">DATE NOT NULL</span>,
+    next_due     <span class="sql-kw">DATE</span>,
+    method       <span class="sql-kw">VARCHAR</span>(<span class="sql-num">50</span>),
+    status       <span class="sql-kw">ENUM</span>(<span class="sql-str">'Done'</span>,<span class="sql-str">'Due'</span>,<span class="sql-str">'Overdue'</span>) <span class="sql-kw">DEFAULT</span> <span class="sql-str">'Done'</span>,
+    created_at   <span class="sql-kw">TIMESTAMP DEFAULT CURRENT_TIMESTAMP</span>,
+    <span class="sql-kw">FOREIGN KEY</span> (flock_id) <span class="sql-kw">REFERENCES</span> flock(id) <span class="sql-kw">ON DELETE CASCADE</span>
+) ENGINE=InnoDB;
+
+<span class="sql-cmt">-- 5. FEED & WATER LOG (Real Farm Issue #4)</span>
+<span class="sql-kw">CREATE TABLE IF NOT EXISTS</span> feed_log (
+    id           <span class="sql-kw">INT AUTO_INCREMENT PRIMARY KEY</span>,
+    flock_id     <span class="sql-kw">INT NOT NULL</span>,
+    log_date     <span class="sql-kw">DATE NOT NULL</span>,
+    feed_kg      <span class="sql-kw">DECIMAL</span>(<span class="sql-num">8</span>,<span class="sql-num">2</span>) <span class="sql-kw">NOT NULL</span>,
+    water_litres <span class="sql-kw">DECIMAL</span>(<span class="sql-num">8</span>,<span class="sql-num">1</span>) <span class="sql-kw">NOT NULL</span>,
+    feed_type    <span class="sql-kw">VARCHAR</span>(<span class="sql-num">50</span>),
+    stock_after  <span class="sql-kw">DECIMAL</span>(<span class="sql-num">8</span>,<span class="sql-num">2</span>),
+    created_at   <span class="sql-kw">TIMESTAMP DEFAULT CURRENT_TIMESTAMP</span>,
+    <span class="sql-kw">FOREIGN KEY</span> (flock_id) <span class="sql-kw">REFERENCES</span> flock(id) <span class="sql-kw">ON DELETE CASCADE</span>
+) ENGINE=InnoDB;
+
+<span class="sql-cmt">-- 6. EGG PRODUCTION</span>
+<span class="sql-kw">CREATE TABLE IF NOT EXISTS</span> egg_production (
+    id           <span class="sql-kw">INT AUTO_INCREMENT PRIMARY KEY</span>,
+    flock_id     <span class="sql-kw">INT NOT NULL</span>,
+    collection_date <span class="sql-kw">DATE NOT NULL</span>,
+    total_eggs   <span class="sql-kw">INT NOT NULL DEFAULT</span> <span class="sql-num">0</span>,
+    broken_eggs  <span class="sql-kw">INT DEFAULT</span> <span class="sql-num">0</span>,
+    sellable_eggs <span class="sql-kw">INT</span> <span class="sql-kw">AS</span> (total_eggs - broken_eggs) <span class="sql-kw">STORED</span>,
+    lay_rate     <span class="sql-kw">DECIMAL</span>(<span class="sql-num">5</span>,<span class="sql-num">2</span>),
+    created_at   <span class="sql-kw">TIMESTAMP DEFAULT CURRENT_TIMESTAMP</span>,
+    <span class="sql-kw">FOREIGN KEY</span> (flock_id) <span class="sql-kw">REFERENCES</span> flock(id) <span class="sql-kw">ON DELETE CASCADE</span>
+) ENGINE=InnoDB;
+
+<span class="sql-cmt">-- 7. PROFIT & LOSS RECORDS</span>
+<span class="sql-kw">CREATE TABLE IF NOT EXISTS</span> pl_records (
+    id           <span class="sql-kw">INT AUTO_INCREMENT PRIMARY KEY</span>,
+    period       <span class="sql-kw">VARCHAR</span>(<span class="sql-num">20</span>),
+    egg_revenue  <span class="sql-kw">DECIMAL</span>(<span class="sql-num">12</span>,<span class="sql-num">2</span>) <span class="sql-kw">DEFAULT</span> <span class="sql-num">0</span>,
+    bird_revenue <span class="sql-kw">DECIMAL</span>(<span class="sql-num">12</span>,<span class="sql-num">2</span>) <span class="sql-kw">DEFAULT</span> <span class="sql-num">0</span>,
+    other_income <span class="sql-kw">DECIMAL</span>(<span class="sql-num">12</span>,<span class="sql-num">2</span>) <span class="sql-kw">DEFAULT</span> <span class="sql-num">0</span>,
+    feed_cost    <span class="sql-kw">DECIMAL</span>(<span class="sql-num">12</span>,<span class="sql-num">2</span>) <span class="sql-kw">DEFAULT</span> <span class="sql-num">0</span>,
+    med_cost     <span class="sql-kw">DECIMAL</span>(<span class="sql-num">12</span>,<span class="sql-num">2</span>) <span class="sql-kw">DEFAULT</span> <span class="sql-num">0</span>,
+    labour_cost  <span class="sql-kw">DECIMAL</span>(<span class="sql-num">12</span>,<span class="sql-num">2</span>) <span class="sql-kw">DEFAULT</span> <span class="sql-num">0</span>,
+    electric_cost <span class="sql-kw">DECIMAL</span>(<span class="sql-num">12</span>,<span class="sql-num">2</span>) <span class="sql-kw">DEFAULT</span> <span class="sql-num">0</span>,
+    net_profit   <span class="sql-kw">DECIMAL</span>(<span class="sql-num">12</span>,<span class="sql-num">2</span>),
+    created_at   <span class="sql-kw">TIMESTAMP DEFAULT CURRENT_TIMESTAMP</span>
+) ENGINE=InnoDB;
+
+<span class="sql-cmt">-- Useful queries
+-- Daily mortality rate:
+-- SELECT death_date, SUM(death_count) as deaths,
+--   (SUM(death_count) / f.current_birds * 100) AS mortality_pct
+--   FROM mortality m JOIN flock f ON m.flock_id=f.id
+--   GROUP BY death_date ORDER BY death_date DESC;
+
+-- Overdue vaccines:
+-- SELECT vaccine_name, next_due, DATEDIFF(CURDATE(), next_due) AS days_overdue
+--   FROM vaccination WHERE next_due < CURDATE() AND status != 'Done';
+
+-- Low feed alert:
+-- SELECT flock_id, stock_after FROM feed_log
+--   WHERE log_date = CURDATE() AND stock_after < (
+--     SELECT current_birds * 0.1 * 7 FROM flock f WHERE f.id = flock_id
+--   );</span>
+</div>
+    </div>
+  </div>
+</div>
+
+</main>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ═══════════════════════════════════════════════
+// STATE — simulates localStorage-backed database
+// ═══════════════════════════════════════════════
+const DB = {
+  flocks: [
+    { id:1, name:'Shed A – Leghorn Layer', breed:'White Leghorn', purpose:'Layer', birds:1500, age:84, date:'2024-10-20' },
+    { id:2, name:'Shed B – Broiler', breed:'Broiler (Cobb 500)', purpose:'Broiler', birds:1200, age:32, date:'2025-01-10' },
+    { id:3, name:'Shed C – Kadaknath', breed:'Kadaknath', purpose:'Dual Purpose', birds:400, age:120, date:'2024-09-15' },
+  ],
+  mortality: [
+    { id:1, flock:'Shed A – Leghorn Layer', date:'2025-02-11', count:2, cause:'Heat Stress', notes:'Temp hit 42°C' },
+    { id:2, flock:'Shed B – Broiler', date:'2025-02-11', count:8, cause:'Newcastle Disease', notes:'Isolate shed!' },
+    { id:3, flock:'Shed A – Leghorn Layer', date:'2025-02-10', count:1, cause:'Unknown', notes:'' },
+    { id:4, flock:'Shed B – Broiler', date:'2025-02-09', count:3, cause:'Heat Stress', notes:'' },
+    { id:5, flock:'Shed C – Kadaknath', date:'2025-02-08', count:0, cause:'None', notes:'' },
+    { id:6, flock:'Shed A – Leghorn Layer', date:'2025-02-07', count:1, cause:'Injury', notes:'' },
+    { id:7, flock:'Shed B – Broiler', date:'2025-02-06', count:6, cause:'Coccidiosis', notes:'Treat with Amprolium' },
+  ],
+  diseases: [
+    { id:1, date:'2025-02-11', name:'Newcastle Disease', affected:240, severity:'Critical', symptoms:'Sneezing, green diarrhoea, sudden deaths', treatment:'Isolate shed. Contact vet.', resolved:false },
+    { id:2, date:'2025-02-09', name:'Heat Stress', affected:80, severity:'Moderate', symptoms:'Panting, wing spreading, reduced feed', treatment:'Increase ventilation, add electrolytes to water', resolved:false },
+    { id:3, date:'2025-01-28', name:'Coccidiosis', affected:45, severity:'Mild', symptoms:'Bloody droppings, lethargy', treatment:'Amprolium 1.5ml/L water for 5 days', resolved:true },
+  ],
+  vaccines: [],
+  feedLogs: [
+    { id:1, date:'2025-02-11', flock:'Shed A – Leghorn Layer', feedKg:168, waterL:460, type:'Layer Mash', stock:610 },
+    { id:2, date:'2025-02-11', flock:'Shed B – Broiler', feedKg:144, waterL:360, type:'Finisher (29d+)', stock:590 },
+    { id:3, date:'2025-02-10', flock:'Shed A – Leghorn Layer', feedKg:165, waterL:450, type:'Layer Mash', stock:778 },
+  ],
+  eggs: [
+    { id:1, date:'2025-02-11', flock:'Shed A – Leghorn Layer', total:1250, broken:18, birds:1500 },
+    { id:2, date:'2025-02-11', flock:'Shed C – Kadaknath', total:312, broken:6, birds:400 },
+    { id:3, date:'2025-02-10', flock:'Shed A – Leghorn Layer', total:1280, broken:12, birds:1500 },
+    { id:4, date:'2025-02-09', flock:'Shed A – Leghorn Layer', total:1190, broken:22, birds:1500 },
+  ],
+  nextId: { mortality:8, disease:4, vaccine:1, feed:4, egg:5 }
+};
+
+// ═══════════════════════════════════════════════
+// NAVIGATION
+// ═══════════════════════════════════════════════
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  if (el) el.classList.add('active');
+  if (name === 'dashboard') refreshDashboard();
+  if (name === 'mortality') renderMortality();
+  if (name === 'disease')   renderDiseases();
+  if (name === 'vaccine')   renderVaccines();
+  if (name === 'feed')      renderFeed();
+  if (name === 'eggs')      renderEggs();
+  if (name === 'flock')     renderFlocks();
+}
+
+// ═══════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════
+function toast(msg, type='success') {
+  const t = document.createElement('div');
+  t.className = `toast ${type}`;
+  const icons = { success:'✓', error:'✗', warning:'⚠' };
+  t.innerHTML = `<span>${icons[type]||'ℹ'}</span> ${msg}`;
+  document.getElementById('toastContainer').appendChild(t);
+  setTimeout(() => t.remove(), 3500);
+}
+
+// ═══════════════════════════════════════════════
+// DASHBOARD
+// ═══════════════════════════════════════════════
+function refreshDashboard() {
+  const totalBirds = DB.flocks.reduce((s,f) => s+f.birds, 0);
+  const weekDeaths = DB.mortality.reduce((s,m) => s+m.count, 0);
+  const liveBirds  = totalBirds - weekDeaths;
+  const mortRate   = ((weekDeaths / totalBirds) * 100).toFixed(2);
+
+  document.getElementById('liveBirds').textContent  = liveBirds.toLocaleString();
+  document.getElementById('mortalityRate').textContent = mortRate + '%';
+  document.getElementById('monthPL').textContent   = '+₹24K';
+
+  const todayEggs = DB.eggs.filter(e => e.date === '2025-02-11').reduce((s,e) => s+e.total, 0);
+  const layRate   = ((todayEggs / liveBirds) * 100).toFixed(0);
+  document.getElementById('todayEggs').textContent = todayEggs.toLocaleString();
+  document.getElementById('eggTrend').textContent  = `↑ ${layRate}% lay rate`;
+
+  buildAlerts();
+  buildMortalityChart('mortalityChart');
+  buildDashVax();
+}
+
+function buildAlerts() {
+  const alerts = [
+    { level:'critical', title:'⚠ Newcastle Disease Outbreak – Shed B', detail:'240 birds affected. 8 deaths today. Shed B must be isolated immediately.', time:'Today, 08:14' },
+    { level:'critical', title:'💉 Infectious Bronchitis Vaccine OVERDUE', detail:'5 days past due for Shed A (1,500 birds). Immunity gap – risk of outbreak.', time:'5 days ago' },
+    { level:'warning',  title:'🌾 Feed Stock critically low', detail:'Only 4 days of feed remaining. Current stock: 1,200 kg. Order now.', time:'Today, 06:00' },
+    { level:'warning',  title:'💀 Mortality rate above threshold', detail:'Weekly mortality 0.42% vs safe limit 0.30%. Investigate Shed B conditions.', time:'This week' },
+  ];
+  const list = document.getElementById('alertsList');
+  list.innerHTML = alerts.map(a => `
+    <div class="alert-item">
+      <div class="alert-pill pill-${a.level === 'critical' ? 'critical' : 'warning'}">${a.level.toUpperCase()}</div>
+      <div class="alert-content">
+        <div class="alert-msg">${a.title}</div>
+        <div class="alert-detail">${a.detail}</div>
+      </div>
+      <div class="alert-time">${a.time}</div>
+    </div>
+  `).join('');
+
+  const c = alerts.filter(a => a.level === 'critical').length;
+  document.getElementById('alertBadge').textContent = `${c} critical`;
+  document.getElementById('alertCount').textContent = `${alerts.length} Alerts`;
+}
+
+function buildMortalityChart(id) {
+  const days = getLast7Days();
+  const el = document.getElementById(id);
+  if (!el) return;
+  const max = 10;
+  el.innerHTML = days.map(d => {
+    const count = DB.mortality.filter(m => m.date === d.iso).reduce((s,m) => s+m.count, 0);
+    const pct = Math.max(5, (count / max) * 100);
+    const danger = count > 5;
+    return `<div class="chart-bar-wrap">
+      <div class="chart-bar ${danger ? 'danger' : 'normal'}" 
+           style="height:${pct}%" 
+           data-val="${count} deaths"></div>
+      <span class="chart-bar-label">${d.short}</span>
+    </div>`;
+  }).join('');
+}
+
+function buildDashVax() {
+  const upcoming = [
+    { name:'Gumboro IBD', flock:'Shed B – Broiler', date:'Today', status:'due' },
+    { name:'Infectious Bronchitis', flock:'Shed A – Leghorn', date:'5 days ago', status:'overdue' },
+    { name:'Newcastle (Lasota)', flock:'Shed B – Broiler', date:'In 3 days', status:'upcoming' },
+  ];
+  document.getElementById('dashVaxList').innerHTML = upcoming.map(v => `
+    <div class="vax-item">
+      <div class="vax-dot ${v.status}"></div>
+      <div class="vax-info">
+        <div class="vax-name">${v.name}</div>
+        <div class="vax-meta">${v.flock} · ${v.date}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════════
+// MORTALITY
+// ═══════════════════════════════════════════════
+function addMortality() {
+  const date  = document.getElementById('mortDate').value;
+  const count = parseInt(document.getElementById('mortCount').value);
+  const flock = document.getElementById('mortFlock').value;
+  const cause = document.getElementById('mortCause').value;
+  const notes = document.getElementById('mortNotes').value;
+  if (!date || !count || !flock) return toast('Please fill all required fields', 'error');
+
+  const severity = count >= 10 ? 'Critical' : count >= 5 ? 'Warning' : 'Normal';
+  DB.mortality.unshift({ id: DB.nextId.mortality++, flock, date, count, cause, notes, severity });
+
+  if (severity === 'Critical') toast(`🚨 CRITICAL: ${count} deaths in ${flock} — possible outbreak!`, 'error');
+  else if (severity === 'Warning') toast(`⚠ Warning: ${count} deaths recorded — monitor closely`, 'warning');
+  else toast(`Mortality log added (${count} deaths)`, 'success');
+
+  renderMortality();
+  ['mortDate','mortCount','mortNotes'].forEach(id => document.getElementById(id).value = '');
+}
+
+function renderMortality() {
+  const body = document.getElementById('mortBody');
+  body.innerHTML = DB.mortality.map((m, i) => {
+    const sevClass = m.severity === 'Critical' ? 'badge-red' : m.severity === 'Warning' ? 'badge-yellow' : 'badge-green';
+    return `<tr>
+      <td>${i+1}</td>
+      <td>${m.date}</td>
+      <td>${m.flock}</td>
+      <td><strong style="color:${m.count>=10?'var(--red)':m.count>=5?'var(--yellow)':'var(--text)'}">${m.count}</strong></td>
+      <td>${m.cause}</td>
+      <td><span class="badge ${sevClass}">${m.severity}</span></td>
+      <td style="font-size:.78rem;color:var(--text-dim)">${m.notes||'—'}</td>
+      <td><button class="btn btn-danger" onclick="deleteMort(${m.id})">🗑</button></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="8" style="text-align:center;padding:2rem;color:var(--text-faint)">No records yet</td></tr>';
+
+  const week  = DB.mortality.reduce((s,m) => s+m.count, 0);
+  const worst = DB.mortality.reduce((a,m) => m.count > a.count ? m : a, {count:0, date:'—'});
+  document.getElementById('weekDeaths').textContent = week + ' birds';
+  document.getElementById('worstDay').textContent   = `${worst.date} (${worst.count} deaths)`;
+  document.getElementById('mortAlertBadge').textContent =
+    DB.mortality.filter(m => m.severity === 'Critical').length + ' critical days';
+  buildMortalityChart('mortalityChart2');
+}
+
+function deleteMort(id) {
+  DB.mortality = DB.mortality.filter(m => m.id !== id);
+  renderMortality();
+  toast('Record deleted', 'warning');
+}
+
+// ═══════════════════════════════════════════════
+// DISEASE
+// ═══════════════════════════════════════════════
+function addDisease() {
+  const date      = document.getElementById('diseaseDate').value;
+  const name      = document.getElementById('diseaseName').value;
+  const affected  = parseInt(document.getElementById('diseaseAffected').value);
+  const severity  = document.getElementById('diseaseSeverity').value;
+  const symptoms  = document.getElementById('diseaseSymptoms').value;
+  const treatment = document.getElementById('diseaseTreatment').value;
+  if (!date || !name || !affected) return toast('Fill all required fields', 'error');
+
+  DB.diseases.unshift({ id: DB.nextId.disease++, date, name, affected, severity, symptoms, treatment, resolved: false });
+  if (severity === 'Critical') toast(`🚨 ${name} is CRITICAL — vet required!`, 'error');
+  else toast(`Disease logged: ${name}`, 'success');
+  renderDiseases();
+  ['diseaseDate','diseaseAffected','diseaseSymptoms','diseaseTreatment'].forEach(id => document.getElementById(id).value='');
+}
+
+function renderDiseases() {
+  const container = document.getElementById('diseaseCards');
+  if (!DB.diseases.length) {
+    container.innerHTML = '<div class="empty-state"><div class="icon">🦠</div><p>No disease records. Great news!</p></div>';
+    return;
+  }
+  container.innerHTML = DB.diseases.map(d => {
+    const col = d.severity==='Critical'?'var(--red)':d.severity==='Severe'?'var(--red)':d.severity==='Moderate'?'var(--yellow)':'var(--blue)';
+    const bBg = d.severity==='Critical'?'badge-red':d.severity==='Moderate'?'badge-yellow':'badge-blue';
+    return `<div class="disease-card" style="border-left-color:${col}">
+      <div class="disease-name">
+        <span>🦠 ${d.name} <small style="color:var(--text-dim);font-weight:400">${d.date}</small></span>
+        <div style="display:flex;gap:.5rem;align-items:center">
+          <span class="badge ${bBg}">${d.severity}</span>
+          ${d.resolved ? '<span class="badge badge-green">Resolved</span>' : '<span class="badge badge-red">Active</span>'}
+        </div>
+      </div>
+      <div class="disease-detail">
+        <strong style="color:var(--text-dim)">Affected:</strong> ${d.affected} birds &nbsp;|&nbsp;
+        <strong style="color:var(--text-dim)">Symptoms:</strong> ${d.symptoms||'—'} &nbsp;|&nbsp;
+        <strong style="color:var(--text-dim)">Treatment:</strong> ${d.treatment||'—'}
+      </div>
+      <div class="disease-actions">
+        ${!d.resolved ? `<button class="btn btn-warn" onclick="resolveDisease(${d.id})">✓ Mark Resolved</button>` : ''}
+        <button class="btn btn-danger" onclick="deleteDisease(${d.id})">🗑 Remove</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function resolveDisease(id) {
+  const d = DB.diseases.find(d => d.id === id);
+  if (d) { d.resolved = true; renderDiseases(); toast('Disease marked as resolved', 'success'); }
+}
+function deleteDisease(id) {
+  DB.diseases = DB.diseases.filter(d => d.id !== id);
+  renderDiseases(); toast('Record deleted', 'warning');
+}
+
+// ═══════════════════════════════════════════════
+// VACCINES
+// ═══════════════════════════════════════════════
+function addVaccine() {
+  const name   = document.getElementById('vaxName').value;
+  const flock  = document.getElementById('vaxFlock').value;
+  const birds  = parseInt(document.getElementById('vaxBirds').value);
+  const date   = document.getElementById('vaxDate').value;
+  const next   = document.getElementById('vaxNextDate').value;
+  const method = document.getElementById('vaxMethod').value;
+  if (!name || !flock || !birds || !date) return toast('Fill all required fields', 'error');
+
+  const today = new Date().toISOString().split('T')[0];
+  const status = !next ? 'Done' : next < today ? 'Overdue' : next === today ? 'Due' : 'Done';
+  DB.vaccines.unshift({ id: DB.nextId.vaccine++, name, flock, birds, date, next, method, status });
+  toast(`Vaccine recorded: ${name} for ${flock}`, 'success');
+  renderVaccines();
+}
+
+function renderVaccines() {
+  const body = document.getElementById('vaxBody');
+  body.innerHTML = DB.vaccines.map((v, i) => {
+    const sc = v.status==='Overdue'?'badge-red':v.status==='Due'?'badge-yellow':'badge-green';
+    return `<tr>
+      <td>${i+1}</td>
+      <td>${v.name}</td>
+      <td>${v.flock}</td>
+      <td>${v.birds.toLocaleString()}</td>
+      <td>${v.date}</td>
+      <td>${v.method}</td>
+      <td>${v.next||'—'}</td>
+      <td><span class="badge ${sc}">${v.status}</span></td>
+      <td><button class="btn btn-danger" onclick="deleteVax(${v.id})">🗑</button></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-faint)">No vaccine records yet</td></tr>';
+}
+
+function deleteVax(id) { DB.vaccines = DB.vaccines.filter(v=>v.id!==id); renderVaccines(); toast('Deleted','warning'); }
+
+// ═══════════════════════════════════════════════
+// FEED & WATER
+// ═══════════════════════════════════════════════
+function addFeedLog() {
+  const date  = document.getElementById('feedDate').value;
+  const flock = document.getElementById('feedFlock').value;
+  const feed  = parseFloat(document.getElementById('feedKg').value);
+  const water = parseFloat(document.getElementById('waterLtr').value);
+  const type  = document.getElementById('feedType').value;
+  const stock = parseFloat(document.getElementById('stockAfter').value) || 0;
+  if (!date || !flock || !feed || !water) return toast('Fill all fields', 'error');
+
+  DB.feedLogs.unshift({ id: DB.nextId.feed++, date, flock, feedKg: feed, waterL: water, type, stock });
+  toast('Feed log saved', 'success');
+  renderFeed();
+}
+
+function renderFeed() {
+  const body = document.getElementById('feedBody');
+  body.innerHTML = DB.feedLogs.map(f => `<tr>
+    <td>${f.date}</td>
+    <td>${f.flock}</td>
+    <td>${f.feedKg} kg</td>
+    <td>${f.waterL} L</td>
+    <td>${f.type}</td>
+    <td><button class="btn btn-danger" onclick="deleteFeed(${f.id})">🗑</button></td>
+  </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-faint)">No logs yet</td></tr>';
+}
+
+function deleteFeed(id) { DB.feedLogs = DB.feedLogs.filter(f=>f.id!==id); renderFeed(); toast('Deleted','warning'); }
+
+// ═══════════════════════════════════════════════
+// EGGS
+// ═══════════════════════════════════════════════
+document.addEventListener('input', function(e) {
+  if (e.target.id === 'eggCount' || e.target.id === 'eggBroken') {
+    const t = parseInt(document.getElementById('eggCount').value) || 0;
+    const b = parseInt(document.getElementById('eggBroken').value) || 0;
+    document.getElementById('eggSellable').value = Math.max(0, t - b);
+  }
+});
+
+function addEggRecord() {
+  const date   = document.getElementById('eggDate').value;
+  const flock  = document.getElementById('eggFlock').value;
+  const total  = parseInt(document.getElementById('eggCount').value);
+  const broken = parseInt(document.getElementById('eggBroken').value) || 0;
+  if (!date || !flock || !total) return toast('Fill all required fields', 'error');
+
+  const flockObj = DB.flocks.find(f => f.name === flock);
+  const birds    = flockObj ? flockObj.birds : 1000;
+  const layRate  = ((total / birds) * 100).toFixed(1);
+
+  DB.eggs.unshift({ id: DB.nextId.egg++, date, flock, total, broken, birds });
+  if (parseFloat(layRate) < 60) toast(`⚠ Lay rate ${layRate}% is critically low for ${flock}`, 'warning');
+  else toast(`Egg collection saved — Lay rate: ${layRate}%`, 'success');
+  renderEggs();
+}
+
+function renderEggs() {
+  const body = document.getElementById('eggBody');
+  body.innerHTML = DB.eggs.map((e, i) => {
+    const lr = ((e.total / e.birds) * 100).toFixed(1);
+    const sc = parseFloat(lr) >= 75 ? 'badge-green' : parseFloat(lr) >= 60 ? 'badge-yellow' : 'badge-red';
+    const st = parseFloat(lr) >= 75 ? '✓ Good' : parseFloat(lr) >= 60 ? '⚠ Low' : '⛔ Critical';
+    return `<tr>
+      <td>${i+1}</td>
+      <td>${e.date}</td>
+      <td>${e.flock}</td>
+      <td>${e.total.toLocaleString()}</td>
+      <td style="color:var(--red)">${e.broken}</td>
+      <td style="color:var(--green)">${(e.total-e.broken).toLocaleString()}</td>
+      <td>${lr}%</td>
+      <td><span class="badge ${sc}">${st}</span></td>
+      <td><button class="btn btn-danger" onclick="deleteEgg(${e.id})">🗑</button></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-faint)">No records yet</td></tr>';
+
+  const allTotal    = DB.eggs.reduce((s,e) => s+e.total, 0);
+  const allBroken   = DB.eggs.reduce((s,e) => s+e.broken, 0);
+  const allSellable = allTotal - allBroken;
+  const avgLR       = DB.eggs.length ? (DB.eggs.reduce((s,e) => s + e.total/e.birds*100, 0)/DB.eggs.length).toFixed(1) : 0;
+  document.getElementById('totalEggsAll').textContent  = allTotal.toLocaleString();
+  document.getElementById('weekEggs').textContent      = DB.eggs.slice(0,7).reduce((s,e)=>s+e.total,0).toLocaleString();
+  document.getElementById('avgLayRate').textContent    = avgLR + '%';
+  document.getElementById('totalSellable').textContent = allSellable.toLocaleString();
+  document.getElementById('totalBroken').textContent   = allBroken.toLocaleString();
+}
+
+function deleteEgg(id) { DB.eggs = DB.eggs.filter(e=>e.id!==id); renderEggs(); toast('Deleted','warning'); }
+
+// ═══════════════════════════════════════════════
+// FLOCKS
+// ═══════════════════════════════════════════════
+function addFlock() {
+  const name    = document.getElementById('flockName').value.trim();
+  const breed   = document.getElementById('flockBreed').value;
+  const purpose = document.getElementById('flockPurpose').value;
+  const birds   = parseInt(document.getElementById('flockBirds').value);
+  const age     = parseInt(document.getElementById('flockAge').value) || 0;
+  const date    = document.getElementById('flockDate').value;
+  if (!name || !birds || !date) return toast('Fill all required fields', 'error');
+
+  const id = DB.flocks.length ? Math.max(...DB.flocks.map(f=>f.id))+1 : 1;
+  DB.flocks.push({ id, name, breed, purpose, birds, age, date });
+  toast(`Flock "${name}" registered (${birds} birds)`, 'success');
+  renderFlocks();
+  populateFlockDropdowns();
+  document.getElementById('flockName').value = '';
+  document.getElementById('flockBirds').value = '';
+}
+
+function renderFlocks() {
+  const body = document.getElementById('flockBody');
+  body.innerHTML = DB.flocks.map((f,i) => {
+    const pc = f.purpose === 'Layer' ? 'badge-gold' : f.purpose === 'Broiler' ? 'badge-red' : 'badge-blue';
+    return `<tr>
+      <td>${i+1}</td>
+      <td><strong>${f.name}</strong></td>
+      <td>${f.breed}</td>
+      <td><span class="badge ${pc}">${f.purpose}</span></td>
+      <td>${f.birds.toLocaleString()}</td>
+      <td>${f.age} days</td>
+      <td>${f.date}</td>
+      <td><button class="btn btn-danger" onclick="deleteFlock(${f.id})">🗑</button></td>
+    </tr>`;
+  }).join('');
+
+  const total = DB.flocks.reduce((s,f)=>s+f.birds,0);
+  const weekDead = DB.mortality.reduce((s,m)=>s+m.count,0);
+  document.getElementById('flockTotalCount').textContent = DB.flocks.length;
+  document.getElementById('flockTotalBirds').textContent = total.toLocaleString();
+  document.getElementById('flockLiveBirds').textContent  = (total - weekDead).toLocaleString();
+
+  const breakdown = {};
+  DB.flocks.forEach(f => breakdown[f.purpose] = (breakdown[f.purpose]||0) + f.birds);
+  document.getElementById('flockBreedBreakdown').innerHTML = Object.entries(breakdown).map(([k,v]) => `
+    <div class="pl-row"><span class="pl-label">${k}</span><span class="pl-value">${v.toLocaleString()} birds</span></div>
+  `).join('');
+}
+
+function deleteFlock(id) {
+  DB.flocks = DB.flocks.filter(f => f.id !== id);
+  renderFlocks();
+  populateFlockDropdowns();
+  toast('Flock removed', 'warning');
+}
+
+// ═══════════════════════════════════════════════
+// PROFIT & LOSS
+// ═══════════════════════════════════════════════
+function calcPL() {
+  const v = id => parseFloat(document.getElementById(id).value)||0;
+  const eggRev   = v('eggsSold') * v('eggPrice');
+  const birdRev  = v('birdsSold') * v('birdPrice');
+  const otherRev = v('otherIncome');
+  const totalRev = eggRev + birdRev + otherRev;
+  const feedC    = v('feedCost');
+  const medC     = v('medCost');
+  const labC     = v('labourCost');
+  const elecC    = v('electricCost');
+  const otherC   = v('otherCost');
+  const totalCost= feedC + medC + labC + elecC + otherC;
+  const net      = totalRev - totalCost;
+  const margin   = totalRev > 0 ? ((net/totalRev)*100).toFixed(1) : 0;
+
+  const fmt = n => '₹' + Math.abs(n).toLocaleString('en-IN');
+  document.getElementById('plEggRev').textContent   = fmt(eggRev);
+  document.getElementById('plBirdRev').textContent  = fmt(birdRev);
+  document.getElementById('plOtherRev').textContent = fmt(otherRev);
+  document.getElementById('plTotalRev').textContent = fmt(totalRev);
+  document.getElementById('plFeedCost').textContent = fmt(feedC);
+  document.getElementById('plMedCost').textContent  = fmt(medC);
+  document.getElementById('plLabCost').textContent  = fmt(labC);
+  document.getElementById('plElecCost').textContent = fmt(elecC);
+  document.getElementById('plOtherCost').textContent= fmt(otherC);
+  document.getElementById('plTotalCost').textContent= fmt(totalCost);
+
+  const res = document.getElementById('plResult');
+  res.textContent = (net >= 0 ? '+' : '−') + fmt(net);
+  res.className = net >= 0 ? 'profit-positive' : 'profit-negative';
+  document.getElementById('plMargin').textContent =
+    `Profit Margin: ${margin}%  |  FCR: ${feedC > 0 && birdRev > 0 ? (feedC/(v('birdsSold')*1.8)).toFixed(2) : '—'}`;
+}
+
+// ═══════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════
+function getLast7Days() {
+  const days = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    days.push({
+      iso:   d.toISOString().split('T')[0],
+      short: d.toLocaleDateString('en', { weekday:'short' })
+    });
+  }
+  return days;
+}
+
+function populateFlockDropdowns() {
+  const ids = ['mortFlock','vaxFlock','feedFlock','eggFlock'];
+  ids.forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    sel.innerHTML = '<option value="">-- Select Flock --</option>' +
+      DB.flocks.map(f => `<option value="${f.name}">${f.name}</option>`).join('');
+  });
+}
+
+function exportCSV(tableId, filename) {
+  const rows = document.querySelectorAll(`#${tableId} tr`);
+  const csv  = [...rows].map(r =>
+    [...r.querySelectorAll('th,td')]
+      .map(c => '"' + c.innerText.replace(/"/g, '""').trim() + '"')
+      .join(',')
+  ).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv,' + encodeURIComponent(csv);
+  a.download = filename + '_' + new Date().toISOString().split('T')[0] + '.csv';
+  a.click();
+  toast('CSV exported successfully', 'success');
+}
+
+function copySQL() {
+  const text = document.getElementById('sqlBlock').innerText;
+  navigator.clipboard.writeText(text).then(() => toast('SQL copied to clipboard!', 'success'));
+}
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+function init() {
+  // Set today's date in all date fields
+  const today = new Date().toISOString().split('T')[0];
+  ['mortDate','diseaseDate','vaxDate','feedDate','eggDate','flockDate'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = today;
+  });
+
+  document.getElementById('navDate').textContent =
+    new Date().toLocaleDateString('en-IN', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+
+  populateFlockDropdowns();
+  refreshDashboard();
+}
+
+init();
+</script>
+</body>
+</html>
